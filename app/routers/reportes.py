@@ -8,7 +8,8 @@ from app.models import Matricula, Horario, Aula, Sucursal, Gestion, Curso, Usuar
 from app.schemas.reportes import ReporteSucursalOut, ReporteGestionOut, ReporteCursoOut, ReporteFacilitadorOut, ReporteGeneralOut
 from sqlalchemy import case
 from sqlalchemy import case, and_  # <- asegúrate que 'and_' esté importado
-
+from app.dependencies import get_current_active_user
+from app.models.usuario import Usuario
 
 router = APIRouter(prefix="/reportes", tags=["Reportes"])
 
@@ -19,7 +20,8 @@ def reporte_general(
     gestion_id: Optional[int] = Query(None),
     curso_id: Optional[int] = Query(None),
     profesor_id: Optional[int] = Query(None),
-    db: Session = Depends(get_session)
+    db: Session = Depends(get_session),
+    usuario: Usuario = Depends(get_current_active_user)
 ):
     query = db.query(Matricula)
 
@@ -60,7 +62,7 @@ def reporte_general(
 
 
 @router.get("/por-sucursal", response_model=list[ReporteSucursalOut])
-def reporte_por_sucursal(db: Session = Depends(get_session)):
+def reporte_por_sucursal(db: Session = Depends(get_session), usuario: Usuario = Depends(get_current_active_user)):
     subquery = (
         db.query(
             Sucursal.sucursal_id,
@@ -108,7 +110,7 @@ def reporte_por_sucursal(db: Session = Depends(get_session)):
 
 
 @router.get("/por-gestion", response_model=list[ReporteGestionOut])
-def reporte_por_gestion(db: Session = Depends(get_session)):
+def reporte_por_gestion(db: Session = Depends(get_session), usuario: Usuario = Depends(get_current_active_user)):
     resultados = (
         db.query(
             Gestion.gestion_id,
@@ -143,7 +145,7 @@ def reporte_por_gestion(db: Session = Depends(get_session)):
 
 
 @router.get("/por-curso", response_model=list[ReporteCursoOut])
-def reporte_por_curso(db: Session = Depends(get_session)):
+def reporte_por_curso(db: Session = Depends(get_session), usuario: Usuario = Depends(get_current_active_user)):
     resultados = (
         db.query(
             Curso.curso_id,
@@ -179,7 +181,7 @@ def reporte_por_curso(db: Session = Depends(get_session)):
 
 
 @router.get("/por-facilitador", response_model=list[ReporteFacilitadorOut])
-def reporte_por_facilitador(db: Session = Depends(get_session)):
+def reporte_por_facilitador(db: Session = Depends(get_session), usuario: Usuario = Depends(get_current_active_user)):
     resultados = (
         db.query(
             Usuario.usuario_id,

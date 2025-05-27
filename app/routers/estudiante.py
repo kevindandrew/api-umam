@@ -5,11 +5,14 @@ from app.models import Estudiante, DatosFamiliar, DatosAcademico, DatosMedico
 from app.schemas.estudiante import EstudianteCreate, EstudianteOut
 from app.database import get_session
 from sqlalchemy.orm import joinedload, session
+from app.dependencies import require_admin_or_encargado
+from app.models.usuario import Usuario
+
 router = APIRouter(prefix="/estudiantes", tags=["Estudiantes"])
 
 
 @router.post("/", response_model=EstudianteOut)
-def crear_estudiante(estudiante: EstudianteCreate, db: Session = Depends(get_session)):
+def crear_estudiante(estudiante: EstudianteCreate, db: Session = Depends(get_session), current_user: Usuario = Depends(require_admin_or_encargado)):
     # Crear estudiante
     nuevo_estudiante = Estudiante(
         nombres=estudiante.nombres,
@@ -52,12 +55,12 @@ def crear_estudiante(estudiante: EstudianteCreate, db: Session = Depends(get_ses
 
 
 @router.get("/", response_model=List[EstudianteOut])
-def obtener_estudiantes(db: Session = Depends(get_session)):
+def obtener_estudiantes(db: Session = Depends(get_session), current_user: Usuario = Depends(require_admin_or_encargado)):
     return db.query(Estudiante).all()
 
 
 @router.get("/{estudiante_id}", response_model=EstudianteOut)
-def obtener_estudiante(estudiante_id: int, db: Session = Depends(get_session)):
+def obtener_estudiante(estudiante_id: int, db: Session = Depends(get_session), current_user: Usuario = Depends(require_admin_or_encargado)):
     estudiante = db.query(Estudiante).filter(
         Estudiante.estudiante_id == estudiante_id).first()
     if not estudiante:
@@ -66,7 +69,7 @@ def obtener_estudiante(estudiante_id: int, db: Session = Depends(get_session)):
 
 
 @router.put("/{estudiante_id}", response_model=EstudianteOut)
-def actualizar_estudiante(estudiante_id: int, estudiante_actualizado: EstudianteCreate, db: Session = Depends(get_session)):
+def actualizar_estudiante(estudiante_id: int, estudiante_actualizado: EstudianteCreate, db: Session = Depends(get_session), current_user: Usuario = Depends(require_admin_or_encargado)):
     estudiante = db.query(Estudiante).filter(
         Estudiante.estudiante_id == estudiante_id).first()
     if not estudiante:
@@ -81,7 +84,7 @@ def actualizar_estudiante(estudiante_id: int, estudiante_actualizado: Estudiante
 
 
 @router.delete("/{estudiante_id}")
-def eliminar_estudiante(estudiante_id: int, db: Session = Depends(get_session)):
+def eliminar_estudiante(estudiante_id: int, db: Session = Depends(get_session), current_user: Usuario = Depends(require_admin_or_encargado)):
     estudiante = db.query(Estudiante).filter(
         Estudiante.estudiante_id == estudiante_id).first()
     if not estudiante:

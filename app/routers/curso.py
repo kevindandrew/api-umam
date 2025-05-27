@@ -9,7 +9,8 @@ from app.schemas.curso import (
 )
 from app.models import Curso, CursoDocente, CursoSucursal, Gestion
 from app.database import get_session
-
+from app.dependencies import require_admin
+from app.models.usuario import Usuario
 router = APIRouter(prefix="/cursos", tags=["Cursos"])
 
 # ---------------------------
@@ -18,7 +19,7 @@ router = APIRouter(prefix="/cursos", tags=["Cursos"])
 
 
 @router.post("/", response_model=CursoOut)
-def crear_curso(curso: CursoCreate, db: Session = Depends(get_session)):
+def crear_curso(curso: CursoCreate, db: Session = Depends(get_session), current_user: Usuario = Depends(require_admin)):
     nuevo_curso = Curso(**curso.dict())
     db.add(nuevo_curso)
     db.commit()
@@ -27,12 +28,12 @@ def crear_curso(curso: CursoCreate, db: Session = Depends(get_session)):
 
 
 @router.get("/", response_model=list[CursoOut])
-def listar_cursos(db: Session = Depends(get_session)):
+def listar_cursos(db: Session = Depends(get_session), current_user: Usuario = Depends(require_admin)):
     return db.query(Curso).all()
 
 
 @router.get("/{curso_id}", response_model=CursoOut)
-def obtener_curso(curso_id: int, db: Session = Depends(get_session)):
+def obtener_curso(curso_id: int, db: Session = Depends(get_session), current_user: Usuario = Depends(require_admin)):
     curso = db.query(Curso).get(curso_id)
     if not curso:
         raise HTTPException(status_code=404, detail="Curso no encontrado")
@@ -40,7 +41,7 @@ def obtener_curso(curso_id: int, db: Session = Depends(get_session)):
 
 
 @router.put("/{curso_id}", response_model=CursoOut)
-def actualizar_curso(curso_id: int, datos: CursoCreate, db: Session = Depends(get_session)):
+def actualizar_curso(curso_id: int, datos: CursoCreate, db: Session = Depends(get_session), current_user: Usuario = Depends(require_admin)):
     curso = db.query(Curso).get(curso_id)
     if not curso:
         raise HTTPException(status_code=404, detail="Curso no encontrado")
@@ -52,7 +53,7 @@ def actualizar_curso(curso_id: int, datos: CursoCreate, db: Session = Depends(ge
 
 
 @router.delete("/{curso_id}", status_code=status.HTTP_204_NO_CONTENT)
-def eliminar_curso(curso_id: int, db: Session = Depends(get_session)):
+def eliminar_curso(curso_id: int, db: Session = Depends(get_session), current_user: Usuario = Depends(require_admin)):
     curso = db.query(Curso).get(curso_id)
     if not curso:
         raise HTTPException(status_code=404, detail="Curso no encontrado")
@@ -64,7 +65,7 @@ def eliminar_curso(curso_id: int, db: Session = Depends(get_session)):
 # CRUD para CursoDocente
 # ---------------------------
 @router.post("/docente", response_model=CursoDocenteOut)
-def asignar_docente(datos: CursoDocenteCreate, db: Session = Depends(get_session)):
+def asignar_docente(datos: CursoDocenteCreate, db: Session = Depends(get_session), current_user: Usuario = Depends(require_admin)):
     asignacion = CursoDocente(**datos.dict())
     db.add(asignacion)
     try:
@@ -81,7 +82,8 @@ def listar_asignaciones_docentes(
     gestion_id: Optional[int] = Query(None),
     usuario_id: Optional[int] = Query(None),
     curso_id: Optional[int] = Query(None),
-    db: Session = Depends(get_session)
+    db: Session = Depends(get_session),
+    current_user: Usuario = Depends(require_admin)
 ):
     query = db.query(CursoDocente)
 
@@ -99,7 +101,7 @@ def listar_asignaciones_docentes(
 # CRUD para CursoSucursal
 # ---------------------------
 @router.post("/sucursal", response_model=CursoSucursalOut)
-def asignar_sucursal(datos: CursoSucursalCreate, db: Session = Depends(get_session)):
+def asignar_sucursal(datos: CursoSucursalCreate, db: Session = Depends(get_session), current_user: Usuario = Depends(require_admin)):
     asignacion = CursoSucursal(**datos.dict())
     db.add(asignacion)
     try:
@@ -116,7 +118,8 @@ def listar_asignaciones_sucursales(
     gestion_id: Optional[int] = Query(None),
     sucursal_id: Optional[int] = Query(None),
     curso_id: Optional[int] = Query(None),
-    db: Session = Depends(get_session)
+    db: Session = Depends(get_session),
+    current_user: Usuario = Depends(require_admin)
 ):
     query = db.query(CursoSucursal)
 
@@ -135,7 +138,7 @@ def listar_asignaciones_sucursales(
 
 
 @router.post("/gestion", response_model=GestionOut)
-def crear_gestion(gestion: GestionCreate, db: Session = Depends(get_session)):
+def crear_gestion(gestion: GestionCreate, db: Session = Depends(get_session), current_user: Usuario = Depends(require_admin)):
     nueva = Gestion(**gestion.dict())
     db.add(nueva)
     db.commit()
@@ -144,5 +147,5 @@ def crear_gestion(gestion: GestionCreate, db: Session = Depends(get_session)):
 
 
 @router.get("/gestiones", response_model=list[GestionOut])
-def listar_gestiones(db: Session = Depends(get_session)):
+def listar_gestiones(db: Session = Depends(get_session), current_user: Usuario = Depends(require_admin)):
     return db.query(Gestion).all()

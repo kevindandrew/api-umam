@@ -15,6 +15,8 @@ from app.models.sucursal import Sucursal  # Asegúrate que exista
 from app.schemas.listas import EstudianteOut, HorarioConEstudiantesOut, ActualizarNota, EstudianteConNotaOut
 from sqlmodel import select
 from sqlalchemy.orm import joinedload
+from app.dependencies import get_current_active_user
+from app.models.usuario import Usuario
 
 router = APIRouter(prefix="/listas", tags=["Listas"])
 
@@ -27,7 +29,8 @@ def listar_estudiantes_inscritos(
     gestion_id: int = Query(None),
     curso_id: int = Query(None),
     profesor_id: int = Query(None),
-    db: Session = Depends(get_session)
+    db: Session = Depends(get_session),
+    usuario: Usuario = Depends(get_current_active_user)
 ):
     query = db.query(Matricula).join(
         Estudiante, Estudiante.estudiante_id == Matricula.estudiante_id
@@ -74,7 +77,7 @@ def listar_estudiantes_inscritos(
 
 
 @router.get("/profesor/{profesor_id}/horarios", response_model=List[HorarioConEstudiantesOut])
-def horarios_con_estudiantes_por_profesor(profesor_id: int, db: Session = Depends(get_session)):
+def horarios_con_estudiantes_por_profesor(profesor_id: int, db: Session = Depends(get_session), usuario: Usuario = Depends(get_current_active_user)):
     horarios = db.query(Horario).options(
         joinedload(Horario.matriculas).joinedload(Matricula.estudiante)
     ).filter(
@@ -115,7 +118,8 @@ def horarios_con_estudiantes_por_profesor(profesor_id: int, db: Session = Depend
 def actualizar_nota_estudiante(
     matricula_id: int,
     datos: ActualizarNota,
-    db: Session = Depends(get_session)
+    db: Session = Depends(get_session),
+    usuario: Usuario = Depends(get_current_active_user)
 ):
     matricula = db.query(Matricula).filter(
         Matricula.matricula_id == matricula_id).first()
