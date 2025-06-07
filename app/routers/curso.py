@@ -5,12 +5,13 @@ from app.schemas.curso import (
     CursoCreate, CursoOut,
     CursoDocenteCreate, CursoDocenteOut,
     CursoSucursalCreate, CursoSucursalOut,
-    GestionCreate, GestionOut
+    GestionCreate, GestionOut, YearCreate, YearOut, YearUpdate, GestionUpdate
 )
 from app.models import Curso, CursoDocente, CursoSucursal, Gestion
 from app.database import get_session
 from app.dependencies import require_admin
 from app.models.usuario import Usuario
+from app.models.year import Year
 router = APIRouter(prefix="/cursos", tags=["Cursos"])
 
 # ---------------------------
@@ -30,6 +31,92 @@ def crear_curso(curso: CursoCreate, db: Session = Depends(get_session), current_
 @router.get("/", response_model=list[CursoOut])
 def listar_cursos(db: Session = Depends(get_session), current_user: Usuario = Depends(require_admin)):
     return db.query(Curso).all()
+
+# ---------------------------
+# CRUD para Gestión
+# ---------------------------
+
+
+@router.post("/gestion", response_model=GestionOut)
+def crear_gestion(gestion: GestionCreate, db: Session = Depends(get_session), current_user: Usuario = Depends(require_admin)):
+    nueva = Gestion(**gestion.dict())
+    db.add(nueva)
+    db.commit()
+    db.refresh(nueva)
+    return nueva
+
+
+@router.get("/gestiones", response_model=list[GestionOut])
+def listar_gestiones(db: Session = Depends(get_session), current_user: Usuario = Depends(require_admin)):
+    return db.query(Gestion).all()
+
+# Editar gestión
+
+
+@router.put("/gestion/{gestion_id}", response_model=GestionOut)
+def editar_gestion(gestion_id: int, datos: GestionUpdate, db: Session = Depends(get_session), current_user: Usuario = Depends(require_admin)):
+    gestion = db.query(Gestion).get(gestion_id)
+    if not gestion:
+        raise HTTPException(status_code=404, detail="Gestión no encontrada")
+    for campo, valor in datos.dict(exclude_unset=True).items():
+        setattr(gestion, campo, valor)
+    db.commit()
+    db.refresh(gestion)
+    return gestion
+
+# Eliminar gestión
+
+
+@router.delete("/gestion/{gestion_id}", status_code=status.HTTP_204_NO_CONTENT)
+def eliminar_gestion(gestion_id: int, db: Session = Depends(get_session), current_user: Usuario = Depends(require_admin)):
+    gestion = db.query(Gestion).get(gestion_id)
+    if not gestion:
+        raise HTTPException(status_code=404, detail="Gestión no encontrada")
+    db.delete(gestion)
+    db.commit()
+
+# Crear año
+
+
+@router.post("/year", response_model=YearOut)
+def crear_year(year: YearCreate, db: Session = Depends(get_session), current_user: Usuario = Depends(require_admin)):
+    nuevo = Year(**year.dict())
+    db.add(nuevo)
+    db.commit()
+    db.refresh(nuevo)
+    return nuevo
+
+# Listar años
+
+
+@router.get("/years", response_model=List[YearOut])
+def listar_years(db: Session = Depends(get_session), current_user: Usuario = Depends(require_admin)):
+    return db.query(Year).all()
+
+# Editar año
+
+
+@router.put("/year/{year_id}", response_model=YearOut)
+def editar_year(year_id: int, datos: YearUpdate, db: Session = Depends(get_session), current_user: Usuario = Depends(require_admin)):
+    year = db.query(Year).get(year_id)
+    if not year:
+        raise HTTPException(status_code=404, detail="Año no encontrado")
+    for campo, valor in datos.dict(exclude_unset=True).items():
+        setattr(year, campo, valor)
+    db.commit()
+    db.refresh(year)
+    return year
+
+# Eliminar año
+
+
+@router.delete("/year/{year_id}", status_code=status.HTTP_204_NO_CONTENT)
+def eliminar_year(year_id: int, db: Session = Depends(get_session), current_user: Usuario = Depends(require_admin)):
+    year = db.query(Year).get(year_id)
+    if not year:
+        raise HTTPException(status_code=404, detail="Año no encontrado")
+    db.delete(year)
+    db.commit()
 
 
 @router.get("/{curso_id}", response_model=CursoOut)
@@ -131,21 +218,3 @@ def listar_asignaciones_sucursales(
         query = query.filter(CursoSucursal.curso_id == curso_id)
 
     return query.all()
-
-# ---------------------------
-# CRUD para Gestión
-# ---------------------------
-
-
-@router.post("/gestion", response_model=GestionOut)
-def crear_gestion(gestion: GestionCreate, db: Session = Depends(get_session), current_user: Usuario = Depends(require_admin)):
-    nueva = Gestion(**gestion.dict())
-    db.add(nueva)
-    db.commit()
-    db.refresh(nueva)
-    return nueva
-
-
-@router.get("/gestiones", response_model=list[GestionOut])
-def listar_gestiones(db: Session = Depends(get_session), current_user: Usuario = Depends(require_admin)):
-    return db.query(Gestion).all()

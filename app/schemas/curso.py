@@ -87,3 +87,30 @@ class GestionOut(GestionBase):
 
     class Config:
         orm_mode = True
+
+
+class GestionUpdate(BaseModel):
+    gestion: Optional[str] = None
+    year_id: Optional[int] = None
+# -------------------------------------
+# 📅 Year Schemas
+# -------------------------------------
+
+
+class YearBase(BaseModel):
+    year: str
+
+
+class YearCreate(YearBase):
+    pass
+
+
+class YearUpdate(BaseModel):
+    year: Optional[str] = None
+
+
+class YearOut(YearBase):
+    year_id: int
+
+    class Config:
+        orm_mode = True
