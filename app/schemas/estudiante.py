@@ -1,5 +1,5 @@
 # schemas/estudiante.py
-from pydantic import BaseModel
+from pydantic import Field, BaseModel
 from typing import List, Optional
 from datetime import date, datetime
 from enum import Enum
@@ -13,15 +13,16 @@ class TipoFamiliar(str, Enum):
     emergencia = "emergencia"
 
 
+# Datos familiares con campos obligatorios
 class DatosFamiliarCreate(BaseModel):
-    tipo: TipoFamiliar  # ← Ahora valida automáticamente los valores
-    ap_paterno: Optional[str]
-    ap_materno: Optional[str]
-    nombres: Optional[str]
-    parentesco: Optional[str]
-    telefono: Optional[str]
-    direccion: Optional[str]
-    relacion: Optional[str]
+    tipo: TipoFamiliar
+    ap_paterno: str = Field(..., min_length=1)  # Obligatorio
+    ap_materno: str = Field(..., min_length=1)  # Obligatorio
+    nombres: str = Field(..., min_length=1)     # Obligatorio
+    parentesco: str = Field(..., min_length=1)  # Obligatorio
+    telefono: str = Field(..., min_length=1)    # Obligatorio
+    direccion: str = Field(..., min_length=1)   # Obligatorio
+    relacion: str = Field(..., min_length=1)    # Obligatorio
 
 
 class DatosFamiliarOut(DatosFamiliarCreate):
@@ -32,11 +33,12 @@ class DatosFamiliarOut(DatosFamiliarCreate):
 
 
 # === Datos académicos ===
+# Datos académicos con campo obligatorio
 class DatosAcademicoCreate(BaseModel):
-    grado_institucion: Optional[str]
-    anios_servicio: Optional[int]
-    ultimo_cargo: Optional[str]
-    otras_habilidades: Optional[str]
+    grado_institucion: str = Field(..., min_length=1)  # Obligatorio
+    anios_servicio: Optional[int] = None
+    ultimo_cargo: Optional[str] = None
+    otras_habilidades: Optional[str] = None
 
 
 class DatosAcademicoOut(DatosAcademicoCreate):
@@ -47,13 +49,14 @@ class DatosAcademicoOut(DatosAcademicoCreate):
 
 
 # === Datos médicos ===
+# Datos médicos con campos obligatorios
 class DatosMedicoCreate(BaseModel):
-    sistema_salud: Optional[str]
-    frecuencia_medico: Optional[str]
-    enfermedad_base: Optional[str]
-    alergias: Optional[str]
-    tratamiento_especifico: Optional[str]
-    tuvo_covid: Optional[bool]
+    sistema_salud: str = Field(..., min_length=1)       # Obligatorio
+    tratamiento_especifico: Optional[str] = None  # Cambiado a Optional
+    tuvo_covid: bool                                   # Obligatorio
+    frecuencia_medico: Optional[str] = None
+    enfermedad_base: Optional[str] = None
+    alergias: Optional[str] = None
 
 
 class DatosMedicoOut(DatosMedicoCreate):
@@ -64,18 +67,19 @@ class DatosMedicoOut(DatosMedicoCreate):
 
 
 # === Estudiante ===
+# Estudiante con campos obligatorios
 class EstudianteBase(BaseModel):
-    nombres: str
-    ap_paterno: str
-    ap_materno: str
-    ci: str
-    telefono: Optional[str]
-    fecha_nacimiento: Optional[date]
-    genero: Optional[str]
-    lugar_nacimiento: Optional[str]
-    estado_civil: Optional[str]
-    direccion: Optional[str]
-    como_se_entero: Optional[str]
+    nombres: str = Field(..., min_length=1)
+    ap_paterno: str = Field(..., min_length=1)
+    ap_materno: str = Field(..., min_length=1)
+    ci: str = Field(..., min_length=1)
+    telefono: str = Field(..., min_length=1)           # Obligatorio
+    fecha_nacimiento: date                             # Obligatorio
+    genero: str = Field(..., min_length=1)             # Obligatorio
+    lugar_nacimiento: str = Field(..., min_length=1)   # Obligatorio
+    estado_civil: str = Field(..., min_length=1)       # Obligatorio
+    direccion: str = Field(..., min_length=1)          # Obligatorio
+    como_se_entero: str = Field(..., min_length=1)     # Obligatorio
 
 
 class EstudianteCreate(EstudianteBase):
