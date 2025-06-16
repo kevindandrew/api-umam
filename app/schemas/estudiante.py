@@ -2,11 +2,19 @@
 from pydantic import BaseModel
 from typing import List, Optional
 from datetime import date, datetime
+from enum import Enum
 
 
 # === Datos familiares ===
+
+class TipoFamiliar(str, Enum):
+    referencia = "referencia"
+    conviviente = "conviviente"
+    emergencia = "emergencia"
+
+
 class DatosFamiliarCreate(BaseModel):
-    tipo: str
+    tipo: TipoFamiliar  # ← Ahora valida automáticamente los valores
     ap_paterno: Optional[str]
     ap_materno: Optional[str]
     nombres: Optional[str]

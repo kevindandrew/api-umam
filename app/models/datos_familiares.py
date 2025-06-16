@@ -21,7 +21,7 @@ class DatosFamiliar(Base):
     relacion: Mapped[str] = mapped_column(String(50), nullable=True)
 
     __table_args__ = (
-        CheckConstraint("tipo IN ('referencia', 'convive')",
+        CheckConstraint("tipo IN ('referencia', 'conviviente', 'emergencia')",
                         name="check_tipo_valido"),
     )
 
