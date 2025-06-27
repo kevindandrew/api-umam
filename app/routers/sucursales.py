@@ -9,7 +9,7 @@ from app.schemas.sucursal import (
     AulaCreate, AulaUpdate, AulaOut
 )
 from app.database import get_session
-from app.dependencies import get_current_active_user, require_admin, require_encargado
+from app.dependencies import get_current_active_user, require_admin, require_encargado, require_admin_or_encargado
 from app.models.usuario import Usuario
 
 router = APIRouter(prefix="/sucursales", tags=["Sucursales"])
@@ -31,7 +31,7 @@ def listar_sucursales(
 def crear_sucursal(
     sucursal_in: SucursalCreate,
     db: Session = Depends(get_session),
-    user: Usuario = Depends(require_admin)
+    user: Usuario = Depends(require_admin_or_encargado)
 ):
     sucursal = Sucursal(**sucursal_in.dict())
     db.add(sucursal)
@@ -45,7 +45,7 @@ def actualizar_sucursal(
     sucursal_id: int,
     sucursal_in: SucursalUpdate,
     db: Session = Depends(get_session),
-    user: Usuario = Depends(require_admin)
+    user: Usuario = Depends(require_admin_or_encargado)
 ):
     sucursal = db.query(Sucursal).get(sucursal_id)
     if not sucursal:
@@ -63,7 +63,7 @@ def actualizar_sucursal(
 def eliminar_sucursal(
     sucursal_id: int,
     db: Session = Depends(get_session),
-    user: Usuario = Depends(require_admin)
+    user: Usuario = Depends(require_admin_or_encargado)
 ):
     sucursal = db.query(Sucursal).get(sucursal_id)
     if not sucursal:
@@ -91,7 +91,7 @@ def crear_aula(
     sucursal_id: int,
     aula_in: AulaCreate,
     db: Session = Depends(get_session),
-    user: Usuario = Depends(require_encargado)
+    user: Usuario = Depends(require_admin_or_encargado)
 ):
     # Asegurar que el aula pertenezca a la sucursal
     if aula_in.sucursal_id != sucursal_id:
@@ -109,7 +109,7 @@ def actualizar_aula(
     aula_id: int,
     aula_in: AulaUpdate,
     db: Session = Depends(get_session),
-    user: Usuario = Depends(require_encargado)
+    user: Usuario = Depends(require_admin_or_encargado)
 ):
     aula = db.query(Aula).get(aula_id)
     if not aula:
@@ -127,7 +127,7 @@ def actualizar_aula(
 def eliminar_aula(
     aula_id: int,
     db: Session = Depends(get_session),
-    user: Usuario = Depends(require_encargado)
+    user: Usuario = Depends(require_admin_or_encargado)
 ):
     aula = db.query(Aula).get(aula_id)
     if not aula:
