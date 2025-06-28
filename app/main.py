@@ -14,7 +14,7 @@ app = FastAPI()
 # Agrega esta configuración justo después de crear la instancia de FastAPI
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "https://tuapp.vercel.app"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
