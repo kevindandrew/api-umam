@@ -14,7 +14,7 @@ class RolPredefinido:
 
 class LoginRequest(BaseModel):
     username: str = Field(..., min_length=3, max_length=50, example="admin")
-    password: str = Field(..., min_length=8,
+    password: str = Field(..., min_length=4,
                           max_length=100, example="password123")
 
 
