@@ -4,7 +4,7 @@ from typing import List
 from app.models import Matricula, Estudiante, Horario, Gestion
 from app.schemas.inscripcion import MatriculaCreate, MatriculaOut, MatriculaUpdate
 from app.database import get_session
-from app.dependencies import require_admin_or_encargado
+from app.dependencies import require_admin_or_encargado, get_current_active_user
 from app.models.usuario import Usuario
 from datetime import datetime
 from pydantic import BaseModel
@@ -33,7 +33,7 @@ class HistorialItem(BaseModel):
 
 
 @router.get("/historial/{estudiante_id}", response_model=List[HistorialItem])
-def historial_academico(estudiante_id: int, db: Session = Depends(get_session), current_user: Usuario = Depends(require_admin_or_encargado)):
+def historial_academico(estudiante_id: int, db: Session = Depends(get_session), current_user: Usuario = Depends(get_current_active_user)):
     estudiante = db.query(Estudiante).get(estudiante_id)
     if not estudiante:
         raise HTTPException(status_code=404, detail="Estudiante no encontrado")
@@ -82,13 +82,13 @@ def crear_inscripcion(datos: MatriculaCreate, db: Session = Depends(get_session)
 
 # 📌 Listar todas las inscripciones
 @router.get("/", response_model=List[MatriculaOut])
-def listar_inscripciones(db: Session = Depends(get_session), current_user: Usuario = Depends(require_admin_or_encargado)):
+def listar_inscripciones(db: Session = Depends(get_session), current_user: Usuario = Depends(get_current_active_user)):
     return db.query(Matricula).all()
 
 
 # 📌 Obtener inscripción por ID
 @router.get("/{matricula_id}", response_model=MatriculaOut)
-def obtener_inscripcion(matricula_id: int, db: Session = Depends(get_session), current_user: Usuario = Depends(require_admin_or_encargado)):
+def obtener_inscripcion(matricula_id: int, db: Session = Depends(get_session), current_user: Usuario = Depends(get_current_active_user)):
     inscripcion = db.query(Matricula).get(matricula_id)
     if not inscripcion:
         raise HTTPException(

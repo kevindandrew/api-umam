@@ -9,7 +9,7 @@ from app.schemas.curso import (
 )
 from app.models import Curso, CursoDocente, CursoSucursal, Gestion
 from app.database import get_session
-from app.dependencies import require_admin
+from app.dependencies import require_admin, get_current_active_user
 from app.models.usuario import Usuario
 from app.models.year import Year
 router = APIRouter(prefix="/cursos", tags=["Cursos"])
@@ -29,7 +29,7 @@ def crear_curso(curso: CursoCreate, db: Session = Depends(get_session), current_
 
 
 @router.get("/", response_model=list[CursoOut])
-def listar_cursos(db: Session = Depends(get_session), current_user: Usuario = Depends(require_admin)):
+def listar_cursos(db: Session = Depends(get_session), current_user: Usuario = Depends(get_current_active_user)):
     return db.query(Curso).all()
 
 # ---------------------------
@@ -47,7 +47,7 @@ def crear_gestion(gestion: GestionCreate, db: Session = Depends(get_session), cu
 
 
 @router.get("/gestiones", response_model=list[GestionOut])
-def listar_gestiones(db: Session = Depends(get_session), current_user: Usuario = Depends(require_admin)):
+def listar_gestiones(db: Session = Depends(get_session), current_user: Usuario = Depends(get_current_active_user)):
     return db.query(Gestion).all()
 
 # Editar gestión
@@ -90,7 +90,7 @@ def crear_year(year: YearCreate, db: Session = Depends(get_session), current_use
 
 
 @router.get("/years", response_model=List[YearOut])
-def listar_years(db: Session = Depends(get_session), current_user: Usuario = Depends(require_admin)):
+def listar_years(db: Session = Depends(get_session), current_user: Usuario = Depends(get_current_active_user)):
     return db.query(Year).all()
 
 # Editar año
@@ -120,7 +120,7 @@ def eliminar_year(year_id: int, db: Session = Depends(get_session), current_user
 
 
 @router.get("/{curso_id}", response_model=CursoOut)
-def obtener_curso(curso_id: int, db: Session = Depends(get_session), current_user: Usuario = Depends(require_admin)):
+def obtener_curso(curso_id: int, db: Session = Depends(get_session), current_user: Usuario = Depends(get_current_active_user)):
     curso = db.query(Curso).get(curso_id)
     if not curso:
         raise HTTPException(status_code=404, detail="Curso no encontrado")
@@ -170,7 +170,7 @@ def listar_asignaciones_docentes(
     usuario_id: Optional[int] = Query(None),
     curso_id: Optional[int] = Query(None),
     db: Session = Depends(get_session),
-    current_user: Usuario = Depends(require_admin)
+    current_user: Usuario = Depends(get_current_active_user)
 ):
     query = db.query(CursoDocente)
 
@@ -206,7 +206,7 @@ def listar_asignaciones_sucursales(
     sucursal_id: Optional[int] = Query(None),
     curso_id: Optional[int] = Query(None),
     db: Session = Depends(get_session),
-    current_user: Usuario = Depends(require_admin)
+    current_user: Usuario = Depends(get_current_active_user)
 ):
     query = db.query(CursoSucursal)
 

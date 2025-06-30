@@ -8,7 +8,7 @@ from app.models.rol import Rol
 from app.models.sucursal import Sucursal
 from app.schemas.usuario import UsuarioCreate, UsuarioUpdate, UsuarioOut
 from app.database import get_session
-from app.dependencies import require_admin
+from app.dependencies import require_admin, get_current_active_user
 router = APIRouter(prefix="/usuarios", tags=["Usuarios"],)
 
 
@@ -18,7 +18,7 @@ def get_usuarios(
     sucursal_id: Optional[int] = Query(None),
     rol_id: Optional[int] = Query(None),
     db: Session = Depends(get_session),
-    current_user: Usuario = Depends(require_admin)
+    current_user: Usuario = Depends(get_current_active_user)
 ):
     query = db.query(Usuario)
 
@@ -32,7 +32,7 @@ def get_usuarios(
 
 
 @router.get("/{usuario_id}", response_model=UsuarioOut)
-def get_usuario(usuario_id: int, db: Session = Depends(get_session), current_user: Usuario = Depends(require_admin)):
+def get_usuario(usuario_id: int, db: Session = Depends(get_session), current_user: Usuario = Depends(get_current_active_user)):
     usuario = db.query(Usuario).get(usuario_id)
     if not usuario:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")

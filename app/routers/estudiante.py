@@ -5,7 +5,7 @@ from app.models import Estudiante, DatosFamiliar, DatosAcademico, DatosMedico
 from app.schemas.estudiante import EstudianteCreate, EstudianteOut, TipoFamiliar
 from app.database import get_session
 from sqlalchemy.orm import joinedload, session, selectinload
-from app.dependencies import require_admin_or_encargado
+from app.dependencies import require_admin_or_encargado, get_current_active_user
 from app.models.usuario import Usuario
 from sqlalchemy.exc import IntegrityError
 
@@ -84,12 +84,12 @@ def crear_estudiante(
 
 
 @router.get("/", response_model=List[EstudianteOut])
-def obtener_estudiantes(db: Session = Depends(get_session), current_user: Usuario = Depends(require_admin_or_encargado)):
+def obtener_estudiantes(db: Session = Depends(get_session), current_user: Usuario = Depends(get_current_active_user)):
     return db.query(Estudiante).all()
 
 
 @router.get("/{estudiante_id}", response_model=EstudianteOut)
-def obtener_estudiante(estudiante_id: int, db: Session = Depends(get_session), current_user: Usuario = Depends(require_admin_or_encargado)):
+def obtener_estudiante(estudiante_id: int, db: Session = Depends(get_session), current_user: Usuario = Depends(get_current_active_user)):
     estudiante = db.query(Estudiante).filter(
         Estudiante.estudiante_id == estudiante_id).first()
     if not estudiante:

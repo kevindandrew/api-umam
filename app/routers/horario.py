@@ -47,7 +47,7 @@ def obtener_horarios(
     usuario_id: Optional[int] = Query(None),
     curso_id: Optional[int] = Query(None),
     db: Session = Depends(get_session),
-    current_user: Usuario = Depends(require_admin_or_encargado)
+    current_user: Usuario = Depends(get_current_active_user)
 ):
     query = db.query(Horario)
 
@@ -120,7 +120,7 @@ def eliminar_horario(horario_id: int, db: Session = Depends(get_session), curren
 
 
 @router.get("/horas", response_model=List[HoraOut])
-def listar_horas(db: Session = Depends(get_session), current_user: Usuario = Depends(require_admin_or_encargado)):
+def listar_horas(db: Session = Depends(get_session), current_user: Usuario = Depends(get_current_active_user)):
     return db.query(Hora).all()
 
 # ✅ POST nueva hora
@@ -167,7 +167,7 @@ def eliminar_hora(hora_id: int, db: Session = Depends(get_session), current_user
 
 
 @router.get("/dias-semana", response_model=List[DiaSemanaOut])
-def listar_dias_semana(db: Session = Depends(get_session), current_user: Usuario = Depends(require_admin_or_encargado)):
+def listar_dias_semana(db: Session = Depends(get_session), current_user: Usuario = Depends(get_current_active_user)):
     return db.query(DiaSemana).all()
 
 
@@ -175,7 +175,7 @@ def listar_dias_semana(db: Session = Depends(get_session), current_user: Usuario
 
 
 @router.get("/{horario_id}", response_model=HorarioOut)
-def obtener_horario(horario_id: int, db: Session = Depends(get_session), current_user: Usuario = Depends(require_admin_or_encargado)):
+def obtener_horario(horario_id: int, db: Session = Depends(get_session), current_user: Usuario = Depends(get_current_active_user)):
     horario = db.query(Horario).filter(
         Horario.horario_id == horario_id).first()
     if not horario:
