@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from app.models import Horario, DiasClase, Hora, DiaSemana, Curso, Aula, Usuario, Gestion
+from app.models import Horario, DiasClase, Hora, DiaSemana, Curso, Aula, Usuario, Gestion, Matricula
 from app.schemas.horario import *
 from app.database import get_session
 from app.dependencies import get_current_active_user
@@ -88,12 +88,32 @@ def actualizar_horario(horario_id: int, datos: HorarioUpdate, db: Session = Depe
 
 @router.delete("/{horario_id}", status_code=204)
 def eliminar_horario(horario_id: int, db: Session = Depends(get_session), current_user: Usuario = Depends(require_admin_or_encargado)):
+    # Verificar si el horario existe
     horario = db.query(Horario).filter(
         Horario.horario_id == horario_id).first()
     if not horario:
         raise HTTPException(status_code=404, detail="Horario no encontrado")
-    db.delete(horario)
-    db.commit()
+
+    try:
+        # 1. Eliminar o actualizar matrículas relacionadas
+        # Opción A: Eliminar matrículas (si es aceptable en tu modelo de negocio)
+        db.query(Matricula).filter(Matricula.horario_id == horario_id).delete()
+
+        # Opción B: O establecer horario_id a NULL si la columna lo permite
+        # (necesitarías cambiar el esquema de la tabla para permitir NULL)
+        # db.query(Matricula).filter(Matricula.horario_id == horario_id).update({"horario_id": None})
+
+        # 2. Eliminar días de clase asociados
+        db.query(DiasClase).filter(DiasClase.horario_id == horario_id).delete()
+
+        # 3. Finalmente eliminar el horario
+        db.delete(horario)
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=400, detail=f"No se pudo eliminar el horario: {str(e)}")
+
     return
 
 # Listar horas disponibles
