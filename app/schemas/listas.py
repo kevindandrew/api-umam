@@ -34,6 +34,7 @@ class EstudianteConMatriculaOut(BaseModel):
 
 
 class EstudianteConNotaOut(BaseModel):
+    matricula_id: int
     estudiante_id: int
     nombres: str
     ap_paterno: str

@@ -61,6 +61,7 @@ def listar_estudiantes_inscritos(
     for m in matriculas:
         estudiante = m.estudiante
         estudiantes.append({
+            "matricula_id": m.matricula_id,  # ✅ Agregado
             "estudiante_id": estudiante.estudiante_id,
             "nombres": estudiante.nombres,
             "ap_paterno": estudiante.ap_paterno,
