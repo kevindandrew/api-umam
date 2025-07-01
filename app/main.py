@@ -9,6 +9,7 @@ from app.routers import estudiante  # Importa el router de estudiantes
 from app.routers import listas  # Importa el router de listas
 from app.routers import reportes  # Importa el router de reportes
 from app.routers import inscripcion  # Importa el router de inscripciones
+from app.routers import backups  # Importa el router de backups
 app = FastAPI()
 
 # Agrega esta configuración justo después de crear la instancia de FastAPI
@@ -30,3 +31,4 @@ app.include_router(estudiante.router)
 app.include_router(listas.router)
 app.include_router(reportes.router)
 app.include_router(inscripcion.router)
+app.include_router(backups.router)
