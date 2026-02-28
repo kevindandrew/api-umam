@@ -20,7 +20,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-# Incluye el router de roles
+# Incluye el router de roles hola gentesita
 
 app.include_router(auth.router)
 app.include_router(usuario.router)
