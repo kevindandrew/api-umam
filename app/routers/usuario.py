@@ -58,7 +58,15 @@ def update_usuario(usuario_id: int, usuario_in: UsuarioUpdate, db: Session = Dep
     if not usuario:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
-    for field, value in usuario_in.dict(exclude_unset=True).items():
+    update_data = usuario_in.dict(exclude_unset=True)
+
+    # Manejo especial del campo password: hashear si viene, ignorar si no viene
+    if "password" in update_data:
+        raw_password = update_data.pop("password")
+        if raw_password:  # Solo actualizar si no es None ni cadena vacía
+            usuario.password = get_password_hash(raw_password)
+
+    for field, value in update_data.items():
         setattr(usuario, field, value)
 
     db.commit()
