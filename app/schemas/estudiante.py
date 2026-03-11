@@ -83,9 +83,9 @@ class EstudianteBase(BaseModel):
 
 
 class EstudianteCreate(EstudianteBase):
-    datos_familiares: Optional[List[DatosFamiliarCreate]] = []
-    datos_academicos: Optional[List[DatosAcademicoCreate]] = []
-    datos_medicos: Optional[List[DatosMedicoCreate]] = []
+    datos_familiares: Optional[List[DatosFamiliarCreate]] = Field(default_factory=list)
+    datos_academicos: Optional[List[DatosAcademicoCreate]] = Field(default_factory=list)
+    datos_medicos: Optional[List[DatosMedicoCreate]] = Field(default_factory=list)
 
     class Config:
         json_schema_extra = {
@@ -138,9 +138,9 @@ class EstudianteCreate(EstudianteBase):
 class EstudianteOut(EstudianteBase):
     estudiante_id: int
     fecha_registro: datetime
-    datos_familiares: List[DatosFamiliarOut] = []
-    datos_academicos: List[DatosAcademicoOut] = []
-    datos_medicos: List[DatosMedicoOut] = []
+    datos_familiares: List[DatosFamiliarOut] = Field(default_factory=list)
+    datos_academicos: List[DatosAcademicoOut] = Field(default_factory=list)
+    datos_medicos: List[DatosMedicoOut] = Field(default_factory=list)
 
     class Config:
         orm_mode = True
