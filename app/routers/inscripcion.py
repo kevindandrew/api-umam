@@ -86,6 +86,24 @@ def listar_inscripciones(db: Session = Depends(get_session), current_user: Usuar
     return db.query(Matricula).all()
 
 
+# 📌 Listar inscripciones de un estudiante específico (con matricula_id para CRUD)
+@router.get("/estudiante/{estudiante_id}", response_model=List[MatriculaOut])
+def listar_inscripciones_por_estudiante(
+    estudiante_id: int,
+    db: Session = Depends(get_session),
+    current_user: Usuario = Depends(get_current_active_user)
+):
+    estudiante = db.query(Estudiante).filter(
+        Estudiante.estudiante_id == estudiante_id
+    ).first()
+    if not estudiante:
+        raise HTTPException(status_code=404, detail="Estudiante no encontrado")
+
+    return db.query(Matricula).filter(
+        Matricula.estudiante_id == estudiante_id
+    ).all()
+
+
 # 📌 Obtener inscripción por ID
 @router.get("/{matricula_id}", response_model=MatriculaOut)
 def obtener_inscripcion(matricula_id: int, db: Session = Depends(get_session), current_user: Usuario = Depends(get_current_active_user)):
