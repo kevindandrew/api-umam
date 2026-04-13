@@ -105,3 +105,10 @@ class HorarioOut(HorarioBase):
 
     class Config:
         orm_mode = True
+
+
+# ----- TRANSFERENCIA DE HORARIO -----
+class HorarioTransferIn(BaseModel):
+    aula_id: int
+    profesor_id: Optional[int] = None
+    dias_clase: Optional[List[DiaClaseBase]] = None
