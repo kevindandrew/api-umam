@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.models import Horario, DiasClase, Hora, DiaSemana, Curso, Aula, Usuario, Gestion, Matricula, CursoSucursal
 from app.schemas.horario import *
@@ -222,6 +223,83 @@ def transferir_horario(
     return horario
 
 
+# Fusionar dos horarios duplicados en uno solo
+@router.post("/{horario_id}/fusionar", response_model=HorarioFusionadoOut)
+def fusionar_horario(
+    horario_id: int,
+    datos: FusionarHorarioIn,
+    db: Session = Depends(get_session),
+    current_user: Usuario = Depends(require_admin_or_encargado),
+):
+    if horario_id == datos.target_horario_id:
+        raise HTTPException(
+            status_code=400,
+            detail="No se puede fusionar un horario consigo mismo",
+        )
+
+    source = db.query(Horario).filter(Horario.horario_id == horario_id).first()
+    if not source:
+        raise HTTPException(status_code=404, detail=f"Horario source {horario_id} no encontrado")
+
+    target = db.query(Horario).filter(Horario.horario_id == datos.target_horario_id).first()
+    if not target:
+        raise HTTPException(status_code=404, detail=f"Horario target {datos.target_horario_id} no encontrado")
+
+    try:
+        # 1. Mover matrículas: ignorar duplicados por estudiante
+        target_estudiantes = {
+            m.estudiante_id
+            for m in db.query(Matricula).filter(Matricula.horario_id == datos.target_horario_id).all()
+        }
+        for matricula in db.query(Matricula).filter(Matricula.horario_id == horario_id).all():
+            if matricula.estudiante_id in target_estudiantes:
+                db.delete(matricula)
+            else:
+                matricula.horario_id = datos.target_horario_id
+                target_estudiantes.add(matricula.estudiante_id)
+        db.flush()
+
+        # 2. Combinar dias_clase: copiar los del source que no existan en target
+        target_dias = {
+            (d.dia_semana_id, d.hora_id)
+            for d in db.query(DiasClase).filter(DiasClase.horario_id == datos.target_horario_id).all()
+        }
+        for dia in db.query(DiasClase).filter(DiasClase.horario_id == horario_id).all():
+            if (dia.dia_semana_id, dia.hora_id) not in target_dias:
+                db.add(DiasClase(
+                    horario_id=datos.target_horario_id,
+                    dia_semana_id=dia.dia_semana_id,
+                    hora_id=dia.hora_id,
+                ))
+                target_dias.add((dia.dia_semana_id, dia.hora_id))
+            db.delete(dia)
+        db.flush()
+
+        # 3. Eliminar el horario source
+        db.delete(source)
+        db.commit()
+        db.refresh(target)
+
+        inscritos = db.query(Matricula).filter(Matricula.horario_id == datos.target_horario_id).count()
+
+        return HorarioFusionadoOut(
+            horario_id=target.horario_id,
+            curso_id=target.curso_id,
+            aula_id=target.aula_id,
+            profesor_id=target.profesor_id,
+            gestion_id=target.gestion_id,
+            activo=target.activo,
+            dias_clase=target.dias_clase,
+            inscritos=inscritos,
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error al fusionar horarios: {str(e)}")
+
+
 # Listar horas disponibles
 
 
@@ -275,6 +353,57 @@ def eliminar_hora(hora_id: int, db: Session = Depends(get_session), current_user
 @router.get("/dias-semana", response_model=List[DiaSemanaOut])
 def listar_dias_semana(db: Session = Depends(get_session), current_user: Usuario = Depends(get_current_active_user)):
     return db.query(DiaSemana).all()
+
+
+# Detectar horarios duplicados (mismo curso + profesor + gestión + aula)
+@router.get("/duplicados", response_model=List[GrupoDuplicadoOut])
+def detectar_duplicados(
+    db: Session = Depends(get_session),
+    current_user: Usuario = Depends(get_current_active_user),
+):
+    grupos_raw = (
+        db.query(
+            Horario.curso_id,
+            Horario.profesor_id,
+            Horario.gestion_id,
+            Horario.aula_id,
+        )
+        .group_by(Horario.curso_id, Horario.profesor_id, Horario.gestion_id, Horario.aula_id)
+        .having(func.count(Horario.horario_id) > 1)
+        .all()
+    )
+
+    resultado = []
+    for grupo in grupos_raw:
+        horarios = db.query(Horario).filter(
+            Horario.curso_id == grupo.curso_id,
+            Horario.profesor_id == grupo.profesor_id,
+            Horario.gestion_id == grupo.gestion_id,
+            Horario.aula_id == grupo.aula_id,
+        ).all()
+
+        horarios_info = []
+        for h in horarios:
+            inscritos = db.query(Matricula).filter(Matricula.horario_id == h.horario_id).count()
+            horarios_info.append(
+                HorarioEnGrupoOut(
+                    horario_id=h.horario_id,
+                    inscritos=inscritos,
+                    dias_clase=h.dias_clase,
+                )
+            )
+
+        resultado.append(
+            GrupoDuplicadoOut(
+                curso_id=grupo.curso_id,
+                profesor_id=grupo.profesor_id,
+                gestion_id=grupo.gestion_id,
+                aula_id=grupo.aula_id,
+                horarios=horarios_info,
+            )
+        )
+
+    return resultado
 
 
 # Obtener un horario específico

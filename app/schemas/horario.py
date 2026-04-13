@@ -112,3 +112,29 @@ class HorarioTransferIn(BaseModel):
     aula_id: int
     profesor_id: Optional[int] = None
     dias_clase: Optional[List[DiaClaseBase]] = None
+
+
+# ----- DUPLICADOS Y FUSIÓN -----
+class FusionarHorarioIn(BaseModel):
+    target_horario_id: int
+
+
+class HorarioEnGrupoOut(BaseModel):
+    horario_id: int
+    inscritos: int
+    dias_clase: List[DiaClaseOut]
+
+    class Config:
+        orm_mode = True
+
+
+class GrupoDuplicadoOut(BaseModel):
+    curso_id: int
+    profesor_id: int
+    gestion_id: int
+    aula_id: int
+    horarios: List[HorarioEnGrupoOut]
+
+
+class HorarioFusionadoOut(HorarioOut):
+    inscritos: int
