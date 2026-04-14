@@ -15,3 +15,4 @@ class Aula(Base):
     # Relaciones
     sucursal: Mapped["Sucursal"] = relationship(back_populates="aulas")
     horarios: Mapped[list["Horario"]] = relationship(back_populates="aula")
+    dias_clase: Mapped[list["DiasClase"]] = relationship(back_populates="aula")

@@ -62,6 +62,7 @@ class AulaOut(AulaBase):
 class DiaClaseBase(BaseModel):
     dia_semana_id: int
     hora_id: int
+    aula_id: Optional[int] = None
 
 
 class DiaClaseCreate(DiaClaseBase):
@@ -72,6 +73,7 @@ class DiaClaseOut(DiaClaseBase):
     dia_clase_id: int
     dia_semana: DiaSemanaOut
     hora: HoraOut
+    aula: Optional[AulaOut] = None
 
     class Config:
         orm_mode = True

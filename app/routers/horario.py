@@ -29,7 +29,8 @@ def crear_horario(horario_in: HorarioCreate, db: Session = Depends(get_session),
         dia_clase = DiasClase(
             horario_id=nuevo_horario.horario_id,
             dia_semana_id=dia.dia_semana_id,
-            hora_id=dia.hora_id
+            hora_id=dia.hora_id,
+            aula_id=dia.aula_id,
         )
         db.add(dia_clase)
 
@@ -77,8 +78,21 @@ def actualizar_horario(horario_id: int, datos: HorarioUpdate, db: Session = Depe
     if not horario:
         raise HTTPException(status_code=404, detail="Horario no encontrado")
 
-    for campo, valor in datos.dict(exclude_unset=True).items():
+    # Actualizar solo campos escalares del horario (no tocar relaciones ORM)
+    campos_escalares = {k: v for k, v in datos.dict(exclude_unset=True).items() if k != "dias_clase"}
+    for campo, valor in campos_escalares.items():
         setattr(horario, campo, valor)
+
+    # Reemplazar dias_clase si se enviaron en el body
+    if datos.dias_clase is not None:
+        db.query(DiasClase).filter(DiasClase.horario_id == horario_id).delete()
+        for dia in datos.dias_clase:
+            db.add(DiasClase(
+                horario_id=horario_id,
+                dia_semana_id=dia.dia_semana_id,
+                hora_id=dia.hora_id,
+                aula_id=dia.aula_id,
+            ))
 
     db.commit()
     db.refresh(horario)
@@ -214,7 +228,8 @@ def transferir_horario(
             nuevo_dia = DiasClase(
                 horario_id=horario_id,
                 dia_semana_id=dia.dia_semana_id,
-                hora_id=dia.hora_id
+                hora_id=dia.hora_id,
+                aula_id=dia.aula_id,
             )
             db.add(nuevo_dia)
 
@@ -270,6 +285,7 @@ def fusionar_horario(
                     horario_id=datos.target_horario_id,
                     dia_semana_id=dia.dia_semana_id,
                     hora_id=dia.hora_id,
+                    aula_id=dia.aula_id,
                 ))
                 target_dias.add((dia.dia_semana_id, dia.hora_id))
             db.delete(dia)
