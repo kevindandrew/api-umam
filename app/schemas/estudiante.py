@@ -138,6 +138,7 @@ class EstudianteCreate(EstudianteBase):
 
 class EstudianteOut(EstudianteBase):
     estudiante_id: int
+    numero_registro: Optional[int] = None
     fecha_registro: datetime
     datos_familiares: List[DatosFamiliarOut] = Field(default_factory=list)
     datos_academicos: List[DatosAcademicoOut] = Field(default_factory=list)
