@@ -5,7 +5,14 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, distinct
 from app.database import get_session
 from app.models import Matricula, Horario, Aula, Sucursal, Gestion, Curso, Usuario
-from app.schemas.reportes import ReporteSucursalOut, ReporteGestionOut, ReporteCursoOut, ReporteFacilitadorOut, ReporteGeneralOut
+from app.models.estudiante import Estudiante
+from app.schemas.reportes import (
+    ReporteSucursalOut, ReporteGestionOut, ReporteCursoOut,
+    ReporteFacilitadorOut, ReporteGeneralOut,
+    ReporteEstudiantesTotalOut, ReporteEstudiantesPorSucursalOut,
+    ReporteEstudiantesPorTipoOut, ReporteEstudiantesPorGeneroOut,
+    ReporteEstudiantesPorMacroDistritoOut,
+)
 from sqlalchemy import case
 from sqlalchemy import case, and_  # <- asegúrate que 'and_' esté importado
 from app.dependencies import get_current_active_user
@@ -215,4 +222,118 @@ def reporte_por_facilitador(db: Session = Depends(get_session), usuario: Usuario
             porcentaje_reprobados=round(
                 (r.reprobados / r.total) * 100, 2) if r.total else 0.0
         ) for r in resultados
+    ]
+
+
+# ── REPORTES DE ESTUDIANTES ──────────────────────────────────────────────────
+
+@router.get("/estudiantes/total", response_model=ReporteEstudiantesTotalOut)
+def reporte_total_estudiantes(
+    db: Session = Depends(get_session),
+    usuario: Usuario = Depends(get_current_active_user),
+):
+    """Total de estudiantes registrados (los eliminados ya no existen en la BD)."""
+    total = db.query(func.count(Estudiante.estudiante_id)).scalar()
+    return ReporteEstudiantesTotalOut(total=total)
+
+
+@router.get("/estudiantes/por-sucursal", response_model=list[ReporteEstudiantesPorSucursalOut])
+def reporte_estudiantes_por_sucursal(
+    db: Session = Depends(get_session),
+    usuario: Usuario = Depends(get_current_active_user),
+):
+    """Estudiantes con matrícula activa agrupados por sucursal."""
+    resultados = (
+        db.query(
+            Sucursal.sucursal_id,
+            Sucursal.nombre,
+            func.count(distinct(Matricula.estudiante_id)).label("total"),
+        )
+        .join(Aula, Aula.sucursal_id == Sucursal.sucursal_id)
+        .join(Horario, Horario.aula_id == Aula.aula_id)
+        .join(Matricula, Matricula.horario_id == Horario.horario_id)
+        .filter(Matricula.estado == "activo")
+        .group_by(Sucursal.sucursal_id, Sucursal.nombre)
+        .all()
+    )
+    return [
+        ReporteEstudiantesPorSucursalOut(
+            sucursal_id=r.sucursal_id,
+            nombre=r.nombre,
+            total=r.total,
+        )
+        for r in resultados
+    ]
+
+
+@router.get("/estudiantes/por-tipo", response_model=list[ReporteEstudiantesPorTipoOut])
+def reporte_estudiantes_por_tipo(
+    db: Session = Depends(get_session),
+    usuario: Usuario = Depends(get_current_active_user),
+):
+    """Estudiantes con matrícula activa separados en gestoría y talleres."""
+    resultados = (
+        db.query(
+            Curso.gestoria,
+            func.count(distinct(Matricula.estudiante_id)).label("total"),
+        )
+        .join(Horario, Horario.curso_id == Curso.curso_id)
+        .join(Matricula, Matricula.horario_id == Horario.horario_id)
+        .filter(Matricula.estado == "activo")
+        .group_by(Curso.gestoria)
+        .all()
+    )
+    return [
+        ReporteEstudiantesPorTipoOut(
+            tipo="gestoria" if r.gestoria else "taller",
+            total=r.total,
+        )
+        for r in resultados
+    ]
+
+
+@router.get("/estudiantes/por-genero", response_model=list[ReporteEstudiantesPorGeneroOut])
+def reporte_estudiantes_por_genero(
+    db: Session = Depends(get_session),
+    usuario: Usuario = Depends(get_current_active_user),
+):
+    """Todos los estudiantes registrados agrupados por género."""
+    resultados = (
+        db.query(
+            Estudiante.genero,
+            func.count(Estudiante.estudiante_id).label("total"),
+        )
+        .filter(Estudiante.genero.isnot(None))
+        .group_by(Estudiante.genero)
+        .order_by(Estudiante.genero)
+        .all()
+    )
+    return [
+        ReporteEstudiantesPorGeneroOut(genero=r.genero, total=r.total)
+        for r in resultados
+    ]
+
+
+@router.get("/estudiantes/por-macro-distrito", response_model=list[ReporteEstudiantesPorMacroDistritoOut])
+def reporte_estudiantes_por_macro_distrito(
+    db: Session = Depends(get_session),
+    usuario: Usuario = Depends(get_current_active_user),
+):
+    """Todos los estudiantes registrados agrupados por macro distrito."""
+    resultados = (
+        db.query(
+            Estudiante.macro_distrito,
+            func.count(Estudiante.estudiante_id).label("total"),
+        )
+        .filter(Estudiante.macro_distrito.isnot(None))
+        .group_by(Estudiante.macro_distrito)
+        .order_by(Estudiante.macro_distrito)
+        .all()
+    )
+    return [
+        ReporteEstudiantesPorMacroDistritoOut(
+            macro_distrito=r.macro_distrito,
+            total=r.total,
+        )
+        for r in resultados
     ]

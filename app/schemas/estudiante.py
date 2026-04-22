@@ -80,6 +80,7 @@ class EstudianteBase(BaseModel):
     estado_civil: str = Field(..., min_length=1)       # Obligatorio
     direccion: str = Field(..., min_length=1)          # Obligatorio
     como_se_entero: str = Field(..., min_length=1)     # Obligatorio
+    macro_distrito: Optional[str] = None
 
 
 class EstudianteCreate(EstudianteBase):

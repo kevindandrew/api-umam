@@ -50,3 +50,29 @@ class ReporteGeneralOut(BaseModel):
     reprobados: int
     porcentaje_aprobados: float
     porcentaje_reprobados: float
+
+
+# ----- REPORTES DE ESTUDIANTES -----
+class ReporteEstudiantesTotalOut(BaseModel):
+    total: int
+
+
+class ReporteEstudiantesPorSucursalOut(BaseModel):
+    sucursal_id: int
+    nombre: str
+    total: int
+
+
+class ReporteEstudiantesPorTipoOut(BaseModel):
+    tipo: str
+    total: int
+
+
+class ReporteEstudiantesPorGeneroOut(BaseModel):
+    genero: str
+    total: int
+
+
+class ReporteEstudiantesPorMacroDistritoOut(BaseModel):
+    macro_distrito: str
+    total: int

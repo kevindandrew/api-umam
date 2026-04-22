@@ -35,7 +35,8 @@ def crear_estudiante(
             lugar_nacimiento=estudiante.lugar_nacimiento,
             estado_civil=estudiante.estado_civil,
             direccion=estudiante.direccion,
-            como_se_entero=estudiante.como_se_entero
+            como_se_entero=estudiante.como_se_entero,
+            macro_distrito=estudiante.macro_distrito,
         )
         db.add(nuevo_estudiante)
         db.flush()  # Para obtener el ID sin hacer commit

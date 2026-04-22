@@ -22,6 +22,7 @@ class Estudiante(Base):
     fecha_registro: Mapped[datetime] = mapped_column(
         TIMESTAMP, nullable=False, default=datetime.utcnow)
     como_se_entero: Mapped[str] = mapped_column(String(100), nullable=True)
+    macro_distrito: Mapped[str] = mapped_column(String(100), nullable=True)
 
     # Relaciones (se definirán después en los modelos correspondientes)
     datos_familiares: Mapped[list["DatosFamiliar"]
