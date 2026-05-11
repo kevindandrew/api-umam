@@ -31,3 +31,4 @@ class Usuario(Base):
         back_populates="usuario"
     )
     horarios: Mapped[list["Horario"]] = relationship(back_populates="profesor")
+    registro_horas: Mapped[list["RegistroHoras"]] = relationship(back_populates="usuario")

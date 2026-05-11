@@ -16,3 +16,4 @@ class Sucursal(Base):
     aulas: Mapped[list["Aula"]] = relationship(back_populates="sucursal")
     curso_sucursal: Mapped[list["CursoSucursal"]
                            ] = relationship(back_populates="sucursal")
+    registro_horas: Mapped[list["RegistroHoras"]] = relationship(back_populates="sucursal")
