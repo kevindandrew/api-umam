@@ -1,6 +1,6 @@
 from datetime import date, datetime
 from typing import Optional
-from sqlalchemy import String, Text, Date, TIMESTAMP, Integer, Sequence
+from sqlalchemy import String, Text, Date, TIMESTAMP, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from .base import Base
 
@@ -26,7 +26,6 @@ class Estudiante(Base):
     macro_distrito: Mapped[str] = mapped_column(String(100), nullable=True)
     numero_registro: Mapped[Optional[int]] = mapped_column(
         Integer,
-        Sequence("num_registro_seq"),
         unique=True,
         nullable=True,
     )
