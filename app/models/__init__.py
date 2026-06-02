@@ -18,6 +18,7 @@ from .datos_academicos import DatosAcademico
 from .datos_medicos import DatosMedico
 from .matricula import Matricula
 from .registro_horas import RegistroHoras
+from .informe_mensual import InformeMensual
 
 __all__ = [
     "Base",
@@ -40,4 +41,5 @@ __all__ = [
     "DatosMedico",
     "Matricula",
     "RegistroHoras",
+    "InformeMensual",
 ]
