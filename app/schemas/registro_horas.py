@@ -16,6 +16,14 @@ class RegistroHorasCreate(BaseModel):
     sucursal_id: Optional[int] = None
 
 
+class RegistroHorasAdminCreate(BaseModel):
+    tipo_servicio: TipoServicio
+    hora_entrada: datetime
+    hora_salida: datetime
+    observaciones: Optional[str] = None
+    sucursal_id: Optional[int] = None
+
+
 class RegistroHorasOut(BaseModel):
     registro_id: int
     usuario_id: int

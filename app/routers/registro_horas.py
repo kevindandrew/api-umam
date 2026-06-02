@@ -9,11 +9,13 @@ from app.database import get_session
 from app.models.registro_horas import RegistroHoras
 from app.models.usuario import Usuario
 from app.dependencies import (
+    require_admin,
     require_facilitador,
     require_admin_or_encargado,
     get_current_active_user,
 )
 from app.schemas.registro_horas import (
+    RegistroHorasAdminCreate,
     RegistroHorasCreate,
     RegistroHorasOut,
     ResumenHorasFacilitador,
@@ -146,6 +148,42 @@ def listar_todos(
 
     resultados = query.order_by(RegistroHoras.hora_entrada.desc()).all()
     return [_to_out(r, u) for r, u in resultados]
+
+
+@router.post("/admin/{facilitador_id}", response_model=RegistroHorasOut)
+def registrar_actividad_facilitador(
+    facilitador_id: int,
+    data: RegistroHorasAdminCreate,
+    db: Session = Depends(get_session),
+    current_user: Usuario = Depends(require_admin),
+):
+    if data.hora_salida <= data.hora_entrada:
+        raise HTTPException(
+            status_code=400,
+            detail="La hora de salida debe ser posterior a la hora de entrada",
+        )
+
+    facilitador = db.query(Usuario).filter(Usuario.usuario_id == facilitador_id).first()
+    if not facilitador:
+        raise HTTPException(status_code=404, detail="Facilitador no encontrado")
+
+    delta = data.hora_salida - data.hora_entrada
+    duracion = round(delta.total_seconds() / 3600, 2)
+
+    registro = RegistroHoras(
+        usuario_id=facilitador_id,
+        tipo_servicio=data.tipo_servicio.value,
+        hora_entrada=data.hora_entrada,
+        hora_salida=data.hora_salida,
+        duracion_horas=duracion,
+        fecha=data.hora_entrada.date(),
+        observaciones=data.observaciones,
+        sucursal_id=data.sucursal_id if data.sucursal_id is not None else facilitador.sucursal_id,
+    )
+    db.add(registro)
+    db.commit()
+    db.refresh(registro)
+    return _to_out(registro, facilitador)
 
 
 @router.get("/resumen/{usuario_id}", response_model=list[ResumenHorasFacilitador])
